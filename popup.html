@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>בודק קישורים ב - NetFree</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-title">
+        <span class="logo-dot"></span>
+        <span>בדיקת קישורי YouTube הכנסה ידנית</span>
+      </div>
+      <div class="header-subtitle">NetFree Checker Pro</div>
+    </header>
+
+    <main class="main">
+      
+      <!-- אזור הזנת קישורים -->
+      <section class="card card-input">
+        <label for="urlInput" class="input-label">הדבק רשימת סרטוני YouTube לבדיקה:</label>
+        <textarea id="urlInput" class="url-input" placeholder="https://www.youtube.com/watch?v=...
+https://youtu.be/...
+(אחד בכל שורה)"></textarea>
+        
+        <div class="input-actions">
+          <button id="pasteBtn" class="btn btn-secondary">📋 הדבק מהלוח</button>
+          <button id="loadFileBtn" class="btn btn-secondary">📂 טען קובץ טקסט</button>
+          <button id="clearInputBtn" class="btn btn-secondary">🗑️ נקה ועצור</button>
+          <input type="file" id="fileInput" accept=".txt" style="display: none;" />
+        </div>
+
+        <div class="main-action-wrapper">
+          <button id="startScanBtn" class="btn btn-start">התחל בדיקה 🚀</button>
+        </div>
+      </section>
+
+      <!-- סטטוס ופרוגרס בר (מוסתר בהתחלה) -->
+      <section id="statusSection" class="card card-status" style="display: none;">
+        <div class="status-row">
+          <span class="status-label">סטטוס:</span>
+          <span id="statusText" class="status-value">ממתין...</span>
+        </div>
+        <div class="progress-wrapper">
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar-fill"></div>
+          </div>
+          <div class="progress-text">
+            <span id="progressCount">0</span>/<span id="progressTotal">0</span>
+          </div>
+        </div>
+        <div id="errorBox" class="error-box" hidden></div>
+      </section>
+
+      <!-- סיכום מספרים -->
+      <section class="card card-summary">
+        <div class="summary-item">
+          <div class="summary-label">סה"כ</div>
+          <div class="summary-value" id="totalFound">0</div>
+        </div>
+        <div class="summary-item summary-open">
+          <div class="summary-label">פתוחים</div>
+          <div class="summary-value" id="openCount">0</div>
+        </div>
+        <div class="summary-item summary-unknown">
+          <div class="summary-label">לא נבדקו</div>
+          <div class="summary-value" id="unknownCount">0</div>
+        </div>
+        <div class="summary-item summary-blocked">
+          <div class="summary-label">חסומים</div>
+          <div class="summary-value" id="blockedCount">0</div>
+        </div>
+        <div class="summary-item summary-error">
+          <div class="summary-label">שגיאות</div>
+          <div class="summary-value" id="errorCount">0</div>
+        </div>
+      </section>
+
+      <!-- רשימות הסרטונים -->
+      <section class="lists-container">
+        
+        <!-- רשימה פתוחה -->
+        <div class="card list-card">
+          <div class="list-header">
+            <div class="list-header-main">
+              <button class="collapse-btn" data-target="openList" aria-expanded="true">▾</button>
+              <h2>סרטונים פתוחים</h2>
+            </div>
+            <div class="btn-group">
+              <button id="copyOpenBtn" class="btn btn-secondary" disabled>העתק ללוח</button>
+              <button id="downloadOpenBtn" class="btn btn-secondary" disabled>הורדת טקסט</button>
+            </div>
+          </div>
+          <ul id="openList" class="url-list"></ul>
+        </div>
+
+        <!-- רשימה שלא נבדקה -->
+        <div class="card list-card">
+          <div class="list-header">
+            <div class="list-header-main">
+              <button class="collapse-btn" data-target="unknownList" aria-expanded="true">▾</button>
+              <h2>עדיין לא נבדקו</h2>
+            </div>
+            <div class="btn-group">
+              <button id="copyUnknownBtn" class="btn btn-secondary" disabled>העתק ללוח</button>
+              <button id="downloadUnknownBtn" class="btn btn-secondary" disabled>הורדת טקסט</button>
+            </div>
+          </div>
+          <ul id="unknownList" class="url-list"></ul>
+        </div>
+
+        <!-- רשימה חסומה -->
+        <div class="card list-card">
+          <div class="list-header">
+            <div class="list-header-main">
+              <button class="collapse-btn" data-target="blockedList" aria-expanded="true">▾</button>
+              <h2>חסומים</h2>
+            </div>
+            <div class="btn-group">
+              <button id="copyBlockedBtn" class="btn btn-secondary" disabled>העתק ללוח</button>
+              <button id="downloadBlockedBtn" class="btn btn-secondary" disabled>הורדת טקסט</button>
+            </div>
+          </div>
+          <ul id="blockedList" class="url-list"></ul>
+        </div>
+
+        <!-- רשימת שגיאות -->
+        <div class="card list-card">
+          <div class="list-header">
+            <div class="list-header-main">
+              <button class="collapse-btn" data-target="errorList" aria-expanded="true">▾</button>
+              <h2>שגיאות בבדיקה</h2>
+            </div>
+            <div class="btn-group">
+              <button id="retryErrorsBtn" class="btn btn-secondary" disabled>נסה שוב</button>
+            </div>
+          </div>
+          <ul id="errorList" class="url-list"></ul>
+        </div>
+      </section>
+
+      <div class="card-actions">
+        <button id="rescanFooterBtn" class="btn btn-primary" style="display: none;">סרוק מחדש</button>
+        <button id="openWindowBtn" class="btn btn-secondary">פתח בחלון נפרד</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
