@@ -8,22 +8,28 @@
 <body>
   <div class="app">
     <header class="header">
-      <div class="header-title">
-        <span class="logo-dot"></span>
-        <span>בדיקת קישורי YouTube הכנסה ידנית</span>
+      <div class="header-top">
+        <div class="header-title">
+          <span class="logo-dot"></span>
+          <span>בדיקת קישורי YouTube הכנסה ידנית</span>
+        </div>
+
+        <!-- הכפתור עבר לכותרת (יוסתר אוטומטית בחלון נפרד) -->
+        <button id="openWindowBtn" class="header-open-btn" type="button">פתח בחלון נפרד</button>
       </div>
+
       <div class="header-subtitle">NetFree Checker Pro</div>
     </header>
 
     <main class="main">
-      
+
       <!-- אזור הזנת קישורים -->
       <section class="card card-input">
         <label for="urlInput" class="input-label">הדבק רשימת סרטוני YouTube לבדיקה:</label>
         <textarea id="urlInput" class="url-input" placeholder="https://www.youtube.com/watch?v=...
 https://youtu.be/...
 (אחד בכל שורה)"></textarea>
-        
+
         <div class="input-actions">
           <button id="pasteBtn" class="btn btn-secondary">📋 הדבק מהלוח</button>
           <button id="loadFileBtn" class="btn btn-secondary">📂 טען קובץ טקסט</button>
@@ -79,7 +85,7 @@ https://youtu.be/...
 
       <!-- רשימות הסרטונים -->
       <section class="lists-container">
-        
+
         <!-- רשימה פתוחה -->
         <div class="card list-card">
           <div class="list-header">
@@ -140,9 +146,9 @@ https://youtu.be/...
         </div>
       </section>
 
+      <!-- פעולות תחתונות -->
       <div class="card-actions">
         <button id="rescanFooterBtn" class="btn btn-primary" style="display: none;">סרוק מחדש</button>
-        <button id="openWindowBtn" class="btn btn-secondary">פתח בחלון נפרד</button>
       </div>
 
     </main>

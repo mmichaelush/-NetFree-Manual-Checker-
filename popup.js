@@ -4,6 +4,10 @@ var NETFREE_API_BASE = "https://www.google.com/~netfree/test-url?u=";
 var stopRequested = false;
 
 document.addEventListener("DOMContentLoaded", function () {
+  // האם אנחנו בחלון נפרד?
+  var params = new URLSearchParams(window.location.search || "");
+  var isStandalone = params.get("standalone") === "1";
+
   // לחצני קלט
   var pasteBtn = document.getElementById("pasteBtn");
   var loadFileBtn = document.getElementById("loadFileBtn");
@@ -11,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var fileInput = document.getElementById("fileInput");
   var startScanBtn = document.getElementById("startScanBtn");
   var urlInput = document.getElementById("urlInput");
-  
+
   // לחצן סריקה מחדש בתחתית
   var rescanFooterBtn = document.getElementById("rescanFooterBtn");
 
@@ -27,36 +31,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
   initCollapseButtons();
 
+  // 2) בחלון הנפרד לא להציג את הכפתור "פתח בחלון נפרד"
+  if (openWindowBtn) {
+    if (isStandalone) {
+      openWindowBtn.style.display = "none";
+    } else {
+      openWindowBtn.addEventListener("click", function () {
+        openInStandaloneWindow();
+      });
+    }
+  }
+
   // --- לוגיקה לתיבת קלט ---
 
   if (pasteBtn) {
-    pasteBtn.addEventListener("click", function() {
+    pasteBtn.addEventListener("click", function () {
       navigator.clipboard.readText()
-        .then(text => {
+        .then(function (text) {
           if (text) {
             urlInput.value += (urlInput.value ? "\n" : "") + text;
           }
         })
-        .catch(err => {
+        .catch(function () {
           alert("לא הצלחתי לקרוא מהלוח. ודא שנתת הרשאה.");
         });
     });
   }
 
   if (loadFileBtn) {
-    loadFileBtn.addEventListener("click", function() {
+    loadFileBtn.addEventListener("click", function () {
       fileInput.click();
     });
   }
 
   if (fileInput) {
-    fileInput.addEventListener("change", function(e) {
+    fileInput.addEventListener("change", function (e) {
       var file = e.target.files[0];
       if (!file) return;
-      
+
       var reader = new FileReader();
-      reader.onload = function(e) {
-        var content = e.target.result;
+      reader.onload = function (e2) {
+        var content = e2.target.result;
         urlInput.value += (urlInput.value ? "\n" : "") + content;
         fileInput.value = ""; // איפוס
       };
@@ -65,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (clearInputBtn) {
-    clearInputBtn.addEventListener("click", function() {
+    clearInputBtn.addEventListener("click", function () {
       stopRequested = true; // עצירת סריקה אם רצה
       urlInput.value = "";
       clearLists();
@@ -78,13 +93,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (startScanBtn) {
-    startScanBtn.addEventListener("click", function() {
+    startScanBtn.addEventListener("click", function () {
       startScanProcess(urlInput.value);
     });
   }
 
   if (rescanFooterBtn) {
-    rescanFooterBtn.addEventListener("click", function() {
+    rescanFooterBtn.addEventListener("click", function () {
       startScanProcess(urlInput.value);
     });
   }
@@ -98,12 +113,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (copyOpenBtn) copyOpenBtn.addEventListener("click", function () { copyListToClipboard(openUrls); });
   if (copyUnknownBtn) copyUnknownBtn.addEventListener("click", function () { copyListToClipboard(unknownUrls); });
   if (copyBlockedBtn) copyBlockedBtn.addEventListener("click", function () { copyListToClipboard(blockedUrls); });
-
-  if (openWindowBtn) {
-    openWindowBtn.addEventListener("click", function () {
-      openInStandaloneWindow();
-    });
-  }
 
   if (retryErrorsBtn) {
     retryErrorsBtn.addEventListener("click", function () {
@@ -164,7 +173,7 @@ function setError(message) {
 function setVisualStatus(finished) {
   var header = document.querySelector(".header");
   if (!header) return;
-  
+
   if (finished) {
     header.classList.add("finished");
   } else {
@@ -229,21 +238,18 @@ function clearLists() {
 
 function toggleActionButtons(enable) {
   var ids = [
-    "downloadOpenBtn", "downloadUnknownBtn", "downloadBlockedBtn", 
+    "downloadOpenBtn", "downloadUnknownBtn", "downloadBlockedBtn",
     "copyOpenBtn", "copyUnknownBtn", "copyBlockedBtn", "retryErrorsBtn"
   ];
-  ids.forEach(id => {
+  ids.forEach(function (id) {
     var el = document.getElementById(id);
-    if(el) el.disabled = !enable;
+    if (el) el.disabled = !enable;
   });
 }
 
 function extractYouTubeLinksFromText(text) {
-  // Regex לזיהוי קישורי יוטיוב
   var regex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[\w\-]+)/g;
   var found = text.match(regex) || [];
-  
-  // ניקוי כפילויות
   return uniqueArray(found);
 }
 
@@ -252,18 +258,18 @@ function startScanProcess(textInput) {
     alert("אנא הזן קישורים לבדיקה");
     return;
   }
-  
+
   stopRequested = false;
   setError(null);
   clearLists();
   setVisualStatus(false);
-  
+
   var rescanFooterBtn = document.getElementById("rescanFooterBtn");
-  if(rescanFooterBtn) rescanFooterBtn.style.display = "none";
+  if (rescanFooterBtn) rescanFooterBtn.style.display = "none";
 
   document.getElementById("statusSection").style.display = "block";
   setStatus("מנתח קישורים...");
-  
+
   var urls = extractYouTubeLinksFromText(textInput);
 
   if (!urls.length) {
@@ -309,9 +315,9 @@ function checkUrlsSequential(urls) {
       setSummary(totalUrlsCount, openUrls.length, unknownUrls.length, blockedUrls.length, errorUrls.length);
 
       updateButtonsState();
-      
+
       var rescanFooterBtn = document.getElementById("rescanFooterBtn");
-      if(rescanFooterBtn) rescanFooterBtn.style.display = "inline-flex";
+      if (rescanFooterBtn) rescanFooterBtn.style.display = "inline-flex";
 
       playCompleted();
       setVisualStatus(true);
@@ -352,13 +358,9 @@ function updateButtonsState() {
 function checkSingleUrl(videoUrl) {
   var apiUrl = NETFREE_API_BASE + encodeURIComponent(videoUrl);
 
-  return fetch(apiUrl, {
-    method: "GET"
-  })
+  return fetch(apiUrl, { method: "GET" })
     .then(function (response) {
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
-      }
+      if (!response.ok) throw new Error("HTTP " + response.status);
       return response.json();
     })
     .then(function (data) {
@@ -383,9 +385,10 @@ function checkSingleUrl(videoUrl) {
           appendUrlToList("openList", videoUrl, "פתוח", "url-pill-open");
         }
       }
+
       setSummary(totalUrlsCount, openUrls.length, unknownUrls.length, blockedUrls.length, errorUrls.length);
     })
-    .catch(function (err) {
+    .catch(function () {
       if (!errorSet.has(videoUrl)) {
         errorSet.add(videoUrl);
         errorUrls.push(videoUrl);
@@ -401,7 +404,7 @@ function retryErrorChecks() {
   var urlsToRetry = errorUrls.slice();
   var errorListEl = document.getElementById("errorList");
   var retryErrorsBtn = document.getElementById("retryErrorsBtn");
-  
+
   if (errorListEl) errorListEl.innerHTML = "";
   errorUrls = [];
   errorSet = new Set();
@@ -411,7 +414,7 @@ function retryErrorChecks() {
   setError(null);
   setVisualStatus(false);
   setStatus("מנסה שוב שגיאות (" + urlsToRetry.length + ")...");
-  
+
   stopRequested = false;
   setProgress(0, urlsToRetry.length);
 
@@ -438,7 +441,7 @@ function retryErrorChecks() {
     var url = urlsToRetry[index];
     setProgress(index + 1, total);
 
-    checkSingleUrl(url).then(function() {
+    checkSingleUrl(url).then(function () {
       index++;
       nextRetry();
     });
@@ -493,7 +496,7 @@ function copyListToClipboard(urls) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function () {
       setStatus("הועתק ללוח!");
-      setTimeout(() => setStatus(""), 2000);
+      setTimeout(function () { setStatus(""); }, 2000);
     }).catch(function () {
       fallbackCopyText(text);
     });
@@ -512,28 +515,39 @@ function fallbackCopyText(text) {
   try {
     document.execCommand("copy");
     setStatus("הועתק ללוח!");
-    setTimeout(() => setStatus(""), 2000);
+    setTimeout(function () { setStatus(""); }, 2000);
   } catch (err) {
     setError("שגיאה בהעתקה.");
   }
   document.body.removeChild(textarea);
 }
 
+/**
+ * 1) פותח חלון נפרד
+ * 2) סוגר מיד את הפופאפ המקורי
+ * 3) מוסיף standalone=1 כדי להסתיר את הכפתור בחלון הנפרד
+ */
 function openInStandaloneWindow() {
-  // פתיחת חלון חדש ורחב יותר
+  var url = (chrome.runtime && chrome.runtime.getURL)
+    ? chrome.runtime.getURL("popup.html?standalone=1")
+    : "popup.html?standalone=1";
+
   chrome.windows.create({
-    url: "popup.html",
+    url: url,
     type: "popup",
     width: 600,
     height: 800
   });
+
+  // סוגר את חלון הפופאפ המקורי
+  window.close();
 }
 
 function playCompleted() {
   try {
     var AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
-    
+
     var ctx = new AudioContext();
     var osc = ctx.createOscillator();
     var gain = ctx.createGain();
@@ -545,7 +559,7 @@ function playCompleted() {
     osc.frequency.setValueAtTime(523.25, ctx.currentTime);
     osc.frequency.linearRampToValueAtTime(659.25, ctx.currentTime + 0.1);
     osc.frequency.linearRampToValueAtTime(783.99, ctx.currentTime + 0.2);
-    
+
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
 
